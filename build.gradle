@@ -45,4 +45,4 @@ test {
 apply plugin: 'application'
 apply plugin: "war"
 
-//#mainClassName = 'com.redis.rediscachingjava.RedisCachingJavaApplication'
+mainClassName = 'com.redis.basicredisleaderboarddemojava.BasicRedisLeaderLoardDemoJavaApplication'
