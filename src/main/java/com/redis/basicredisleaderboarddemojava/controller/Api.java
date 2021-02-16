@@ -58,7 +58,7 @@ public class Api implements ApplicationListener<ContextRefreshedEvent> {
 
     @RequestMapping("/api/list/inRank")
     @ResponseBody
-    public String getinRank(HttpServletResponse response, @RequestParam(name = "start") int start,
+    public String getInRank(HttpServletResponse response, @RequestParam(name = "start") int start,
                             @RequestParam(name = "end") int end) {
         return getRedisDataZrevrangeWithScores(start, end, jedis, redis_leaderboard);
     }
