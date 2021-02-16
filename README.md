@@ -83,7 +83,7 @@ Problem with unsupported flags when deploying google cloud run button
 ## Development
 
 ```
-git clone https://github.com/deliveryweb/redis-rate-limiting-java.git
+git clone 
 ```
 
 ### Run docker compose or install redis manually
