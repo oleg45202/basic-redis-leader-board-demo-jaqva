@@ -96,7 +96,7 @@ docker-compose up -d --build
 ```
 
 #### If you install redis manually open src/main/resources/ folder and provide the values for environment variables in application.properties
-    REDIS_URL=
+    redis_url=
 
 #### else  
     copy .env.example .env

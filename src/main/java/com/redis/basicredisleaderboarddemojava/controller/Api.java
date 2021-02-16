@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.exceptions.JedisConnectionException;
 
 import java.util.*;
 import javax.servlet.http.HttpServletResponse;
@@ -96,11 +97,15 @@ public class Api implements ApplicationListener<ContextRefreshedEvent> {
 
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
-        jedis = new Jedis(properties_uri);
-        resetData(Boolean.parseBoolean(
-                jedis.get(data_ready_redis_key)),
-                jedis, data_ready_redis_key,
-                redis_leaderboard);
+        try {
+            jedis = new Jedis(properties_uri);
+            resetData(Boolean.parseBoolean(
+                    jedis.get(data_ready_redis_key)),
+                    jedis, data_ready_redis_key,
+                    redis_leaderboard);
+        }
+        catch (Exception ignored) {
+        }
     }
 
 }
