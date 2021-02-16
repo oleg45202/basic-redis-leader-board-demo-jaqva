@@ -1,6 +1,5 @@
 package com.redis.basicredisleaderboarddemojava.controller;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationListener;
@@ -23,7 +22,7 @@ import static com.redis.basicredisleaderboarddemojava.controller.Utils.*;
 @Service
 @Component
 public class Api implements ApplicationListener<ContextRefreshedEvent> {
-    @Value("${REDIS_URL}")
+    @Value("${redis_url}")
     private String properties_uri;
 
     @Value("${redis_leaderboard}")
@@ -59,31 +58,18 @@ public class Api implements ApplicationListener<ContextRefreshedEvent> {
     @RequestMapping("/api/list/inRank")
     @ResponseBody
     public String getinRank(HttpServletResponse response, @RequestParam(name = "start") int start,
-                         @RequestParam(name = "end") int end
-    ) {
+                            @RequestParam(name = "end") int end) {
         return getRedisDataZrevrangeWithScores(start, end, jedis, redis_leaderboard);
     }
 
     @RequestMapping("/api/list/getBySymbol")
     @ResponseBody
-    public String getBySymbol(HttpServletResponse response, @RequestParam(name = "symbols") List<String> symbols
-
-    ) {
+    public String getBySymbol(HttpServletResponse response, @RequestParam(name = "symbols") List<String> symbols) {
         List<JSONObject> list = new ArrayList<>();
         for (String symbol : symbols) {
-            Long s = jedis.zscore(redis_leaderboard, symbol).longValue();
-            JSONObject json = new JSONObject();
-            Map<String, String> company = jedis.hgetAll(symbol);
-            try {
-                json.put("marketCap", s);
-                json.put("symbol",symbol);
-                json.put("country", company.get("country"));
-                json.put("company", company.get("company"));
-
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-            list.add(json);
+            list.add(addDataToResult(jedis.hgetAll(symbol),
+                    jedis.zscore(redis_leaderboard, symbol).longValue(),
+                    symbol));
         }
         return list.toString();
     }
@@ -92,9 +78,7 @@ public class Api implements ApplicationListener<ContextRefreshedEvent> {
     @RequestMapping("/api/rank/update")
     @ResponseBody
     public String updateAmount(HttpServletResponse response, @RequestParam(name = "symbol") String symbol,
-                               @RequestParam(name = "amount") Long amount
-
-    ) {
+                               @RequestParam(name = "amount") Long amount) {
         try {
             jedis.zincrby(redis_leaderboard, amount.doubleValue(), symbol);
             return "{success: true}";
@@ -106,17 +90,17 @@ public class Api implements ApplicationListener<ContextRefreshedEvent> {
 
     @RequestMapping("/api/rank/reset")
     @ResponseBody
-    public String reset(HttpServletResponse response
-
-    ) {
+    public String reset(HttpServletResponse response) {
         return resetData(false, jedis, data_ready_redis_key, redis_leaderboard);
     }
 
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
         jedis = new Jedis(properties_uri);
-        resetData(Boolean.parseBoolean(jedis.get(data_ready_redis_key)), jedis, data_ready_redis_key, redis_leaderboard);
+        resetData(Boolean.parseBoolean(
+                jedis.get(data_ready_redis_key)),
+                jedis, data_ready_redis_key,
+                redis_leaderboard);
     }
-
 
 }

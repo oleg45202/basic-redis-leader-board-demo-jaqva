@@ -15,7 +15,8 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Utils {
-    public static String resetData(boolean isDataReady, Jedis jedis, String data_ready_redis_key, String redis_leaderboard) {
+    public static String resetData(boolean isDataReady, Jedis jedis, String data_ready_redis_key,
+                                   String redis_leaderboard) {
         boolean is_ok = true;
         if (!isDataReady){
             try {
@@ -37,6 +38,18 @@ public class Utils {
         return String.format("{\"succes\":%s}", is_ok);
     }
 
+    protected static String getRedisDataZrangeWithScores(int start, int end, Jedis jedis, String redis_leaderboard) {
+        Set<Tuple> zrangeWithScores =  jedis.zrangeWithScores(redis_leaderboard, start, end);
+        return resultList(zrangeWithScores, jedis,
+                new AtomicInteger((zrangeWithScores.size() + 1) / (1 - start)),
+                false);
+    }
+
+    protected static String getRedisDataZrevrangeWithScores(int start, int end, Jedis jedis, String redis_leaderboard) {
+        return resultList(jedis.zrevrangeWithScores(redis_leaderboard, start, end), jedis,
+                new AtomicInteger(start),
+                true);
+    }
 
     private static String readFile(String filename) {
         String result = "";
@@ -55,48 +68,33 @@ public class Utils {
         return result;
     }
 
-    protected static String getRedisDataZrangeWithScores(int start, int end, Jedis jedis, String redis_leaderboard) {
-        List<JSONObject> topList = new ArrayList<>();
-        Set<Tuple> zrangeWithScores =  jedis.zrangeWithScores(redis_leaderboard, start, end);
-        AtomicInteger index = new AtomicInteger((zrangeWithScores.size() + 1) / 1 - start);
-        zrangeWithScores.forEach((k) -> {
-            JSONObject json = new JSONObject();
-            Map<String, String> company = jedis.hgetAll(k.getElement());
-            try {
-                json.put("marketCap", ((Double) k.getScore()).longValue());
-                json.put("symbol", k.getElement());
-                json.put("rank", index.decrementAndGet());
-                json.put("country", company.get("country"));
-                json.put("company", company.get("company"));
+    private static String resultList(Set<Tuple> jedisRedis, Jedis jedis, AtomicInteger index, boolean isIncrease) {
+        List<JSONObject> resultList = new ArrayList<>();
+        jedisRedis.forEach((k) -> {
 
+            Map<String, String> company = jedis.hgetAll(k.getElement());
+            JSONObject json = addDataToResult(company, ((Double) k.getScore()).longValue(), k.getElement());
+            try {
+                json.put("rank",  isIncrease ? index.incrementAndGet() : index.decrementAndGet());
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-            topList.add(json);
+            resultList.add(json);
         });
-        return topList.toString();
+        return resultList.toString();
     }
 
-    protected static String getRedisDataZrevrangeWithScores(int start, int end, Jedis jedis, String redis_leaderboard) {
-        List<JSONObject> topList = new ArrayList<>();
-        AtomicInteger index = new AtomicInteger(start);
-        jedis.zrevrangeWithScores(redis_leaderboard, start, end).forEach((k) -> {
-            JSONObject json = new JSONObject();
-            Map<String, String> company = jedis.hgetAll(k.getElement());
-            try {
-                json.put("marketCap", ((Double) k.getScore()).longValue());
-                json.put("symbol", k.getElement());
-                json.put("rank", index.incrementAndGet());
-                json.put("country", company.get("country"));
-                json.put("company", company.get("company"));
-
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-            topList.add(json);
-        });
-        return topList.toString();
+    protected static JSONObject addDataToResult(Map<String, String> company, Long marketCap, String symbol){
+        JSONObject json = new JSONObject();
+        try {
+            json.put("marketCap", (marketCap));
+            json.put("symbol", symbol);
+            json.put("country", company.get("country"));
+            json.put("company", company.get("company"));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return json;
     }
-
 
 }
