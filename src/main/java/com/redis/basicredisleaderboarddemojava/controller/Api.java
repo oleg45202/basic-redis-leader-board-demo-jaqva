@@ -23,13 +23,13 @@ import static com.redis.basicredisleaderboarddemojava.controller.Utils.*;
 @Service
 @Component
 public class Api implements ApplicationListener<ContextRefreshedEvent> {
-    @Value("${redis_url}")
+    @Value("${REDIS_URL}")
     private String properties_uri;
 
-    @Value("${redis_leaderboard}")
+    @Value("${REDIS_LEADERBOARD}")
     private String redis_leaderboard;
 
-    @Value("${data_ready_redis_key}")
+    @Value("${LEADERBOARD_DATA_READY}")
     private String data_ready_redis_key;
 
     Jedis jedis;
