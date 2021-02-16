@@ -71,7 +71,7 @@ public class Api implements ApplicationListener<ContextRefreshedEvent> {
     ) {
         List<JSONObject> list = new ArrayList<>();
         for (String symbol : symbols) {
-            Long s  =jedis.zscore(redis_leaderboard, symbol).longValue();
+            Long s = jedis.zscore(redis_leaderboard, symbol).longValue();
             JSONObject json = new JSONObject();
             Map<String, String> company = jedis.hgetAll(symbol);
             try {

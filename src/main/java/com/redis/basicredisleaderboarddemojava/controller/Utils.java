@@ -4,12 +4,14 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.Tuple;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Utils {
@@ -55,14 +57,15 @@ public class Utils {
 
     protected static String getRedisDataZrangeWithScores(int start, int end, Jedis jedis, String redis_leaderboard) {
         List<JSONObject> topList = new ArrayList<>();
-        AtomicInteger index = new AtomicInteger(0);
-        jedis.zrangeWithScores(redis_leaderboard, start, end).forEach((k) -> {
+        Set<Tuple> zrangeWithScores =  jedis.zrangeWithScores(redis_leaderboard, start, end);
+        AtomicInteger index = new AtomicInteger((zrangeWithScores.size() + 1) / 1 - start);
+        zrangeWithScores.forEach((k) -> {
             JSONObject json = new JSONObject();
             Map<String, String> company = jedis.hgetAll(k.getElement());
             try {
                 json.put("marketCap", ((Double) k.getScore()).longValue());
                 json.put("symbol", k.getElement());
-                json.put("rank", index.incrementAndGet());
+                json.put("rank", index.decrementAndGet());
                 json.put("country", company.get("country"));
                 json.put("company", company.get("company"));
 
@@ -76,7 +79,7 @@ public class Utils {
 
     protected static String getRedisDataZrevrangeWithScores(int start, int end, Jedis jedis, String redis_leaderboard) {
         List<JSONObject> topList = new ArrayList<>();
-        AtomicInteger index = new AtomicInteger(0);
+        AtomicInteger index = new AtomicInteger(start);
         jedis.zrevrangeWithScores(redis_leaderboard, start, end).forEach((k) -> {
             JSONObject json = new JSONObject();
             Map<String, String> company = jedis.hgetAll(k.getElement());
