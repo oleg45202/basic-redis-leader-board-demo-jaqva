@@ -23,8 +23,8 @@ public class Utils {
                 JSONArray companyJsonArray = new JSONArray(readFile("src/main/resources/data.json"));
                 JSONObject companyJson;
                 String symbol;
-                for (int i=0; i<companyJsonArray.length(); i++) {
-                    companyJson = new JSONObject(companyJsonArray.getString(i));
+                for (int i = 0; i < companyJsonArray.length(); i++) {
+                    companyJson = companyJsonArray.getJSONObject(i);
                     symbol = companyJson.get("symbol").toString().toLowerCase();
                     jedis.zadd(redis_leaderboard, Double.parseDouble(companyJson.get("marketCap").toString()), symbol);
                     jedis.hset(symbol, "company", companyJson.get("company").toString());
