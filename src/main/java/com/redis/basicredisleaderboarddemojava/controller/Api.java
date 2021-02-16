@@ -6,12 +6,8 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import redis.clients.jedis.Jedis;
-import redis.clients.jedis.exceptions.JedisConnectionException;
 
 import java.util.*;
 import javax.servlet.http.HttpServletResponse;
@@ -76,17 +72,19 @@ public class Api implements ApplicationListener<ContextRefreshedEvent> {
     }
 
 
-    @RequestMapping("/api/rank/update")
-    @ResponseBody
-    public String updateAmount(HttpServletResponse response, @RequestParam(name = "symbol") String symbol,
-                               @RequestParam(name = "amount") Long amount) {
+    @RequestMapping(value = "/api/rank/update", method = RequestMethod.PATCH)
+    public String updateAmount(HttpServletResponse response, @RequestBody Map<String, Object> payload) {
+        boolean is_ok = true;
         try {
-            jedis.zincrby(redis_leaderboard, amount.doubleValue(), symbol);
-            return "{success: true}";
+            jedis.zincrby(redis_leaderboard,
+                    ((Long) payload.get("amount")).doubleValue(),
+                    payload.get("symbol").toString());
+
         }
         catch (Exception e) {
-            return "{success: false}";
+            is_ok = false;
         }
+        return String.format("{success: %s}", is_ok);
     }
 
     @RequestMapping("/api/rank/reset")
