@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.*;
 import redis.clients.jedis.Jedis;
 
 import java.util.*;
-import javax.servlet.http.HttpServletResponse;
 
 import static com.redis.basicredisleaderboarddemojava.controller.Utils.*;
 
