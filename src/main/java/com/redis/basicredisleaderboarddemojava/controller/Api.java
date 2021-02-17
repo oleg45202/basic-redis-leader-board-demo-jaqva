@@ -33,35 +33,32 @@ public class Api implements ApplicationListener<ContextRefreshedEvent> {
 
     @RequestMapping(value = "/api/list/top10", produces = { "text/html; charset=utf-8" })
     @ResponseBody
-    public String getTop10(HttpServletResponse response
-    ) {
+    public String getTop10() {
         return getRedisDataZrevrangeWithScores(0, 9, jedis, redisLeaderboard);
     }
 
     @RequestMapping(value = "/api/list/all", produces = { "text/html; charset=utf-8" })
     @ResponseBody
-    public String getAll(HttpServletResponse response
-    ) {
+    public String getAll() {
         return getRedisDataZrevrangeWithScores(0, -1, jedis, redisLeaderboard);
     }
 
     @RequestMapping(value = "/api/list/bottom10", produces = { "text/html; charset=utf-8" })
     @ResponseBody
-    public String get10(HttpServletResponse response
-    ) {
+    public String get10() {
         return getRedisDataZrangeWithScores(0, 9, jedis, redisLeaderboard);
     }
 
     @RequestMapping("/api/list/inRank")
     @ResponseBody
-    public String getInRank(HttpServletResponse response, @RequestParam(name = "start") int start,
+    public String getInRank(@RequestParam(name = "start") int start,
                             @RequestParam(name = "end") int end) {
         return getRedisDataZrevrangeWithScores(start, end, jedis, redisLeaderboard);
     }
 
     @RequestMapping("/api/list/getBySymbol")
     @ResponseBody
-    public String getBySymbol(HttpServletResponse response, @RequestParam(name = "symbols") List<String> symbols) {
+    public String getBySymbol(@RequestParam(name = "symbols") List<String> symbols) {
         List<JSONObject> list = new ArrayList<>();
         for (String symbol : symbols) {
             list.add(addDataToResult(jedis.hgetAll(symbol),
@@ -73,7 +70,7 @@ public class Api implements ApplicationListener<ContextRefreshedEvent> {
 
 
     @RequestMapping(value = "/api/rank/update", method = RequestMethod.PATCH)
-    public String updateAmount(HttpServletResponse response, @RequestBody Map<String, Object> payload) {
+    public String updateAmount(@RequestBody Map<String, Object> payload) {
         boolean isOk = true;
         try {
             jedis.zincrby(redisLeaderboard,
@@ -89,7 +86,7 @@ public class Api implements ApplicationListener<ContextRefreshedEvent> {
 
     @RequestMapping("/api/rank/reset")
     @ResponseBody
-    public String reset(HttpServletResponse response) {
+    public String reset() {
         return resetData(false, jedis, dataReadyRedisKey, redisLeaderboard);
     }
 
