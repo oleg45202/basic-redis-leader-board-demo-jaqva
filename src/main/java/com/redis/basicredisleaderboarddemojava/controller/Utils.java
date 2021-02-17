@@ -15,9 +15,9 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Utils {
-    public static String resetData(boolean isDataReady, Jedis jedis, String data_ready_redis_key,
-                                   String redis_leaderboard) {
-        boolean is_ok = true;
+    public static String resetData(boolean isDataReady, Jedis jedis, String dataReadyRedisKey,
+                                   String redisLeaderboard) {
+        boolean isOk = true;
         if (!isDataReady){
             try {
                 JSONArray companyJsonArray = new JSONArray(readFile("src/main/resources/data.json"));
@@ -26,27 +26,27 @@ public class Utils {
                 for (int i = 0; i < companyJsonArray.length(); i++) {
                     companyJson = companyJsonArray.getJSONObject(i);
                     symbol = companyJson.get("symbol").toString().toLowerCase();
-                    jedis.zadd(redis_leaderboard, Double.parseDouble(companyJson.get("marketCap").toString()), symbol);
+                    jedis.zadd(redisLeaderboard, Double.parseDouble(companyJson.get("marketCap").toString()), symbol);
                     jedis.hset(symbol, "company", companyJson.get("company").toString());
                     jedis.hset(symbol, "country", companyJson.get("country").toString());
                 }
-                jedis.set(data_ready_redis_key, "true");
+                jedis.set(dataReadyRedisKey, "true");
             } catch (Exception e) {
-                is_ok = false;
+                isOk = false;
             }
         }
-        return String.format("{\"succes\":%s}", is_ok);
+        return String.format("{\"succes\":%s}", isOk);
     }
 
-    protected static String getRedisDataZrangeWithScores(int start, int end, Jedis jedis, String redis_leaderboard) {
-        Set<Tuple> zrangeWithScores =  jedis.zrangeWithScores(redis_leaderboard, start, end);
+    protected static String getRedisDataZrangeWithScores(int start, int end, Jedis jedis, String redisLeaderboard) {
+        Set<Tuple> zrangeWithScores =  jedis.zrangeWithScores(redisLeaderboard, start, end);
         return resultList(zrangeWithScores, jedis,
                 new AtomicInteger((zrangeWithScores.size() + 1) / (1 - start)),
                 false);
     }
 
-    protected static String getRedisDataZrevrangeWithScores(int start, int end, Jedis jedis, String redis_leaderboard) {
-        return resultList(jedis.zrevrangeWithScores(redis_leaderboard, start, end), jedis,
+    protected static String getRedisDataZrevrangeWithScores(int start, int end, Jedis jedis, String redisLeaderboard) {
+        return resultList(jedis.zrevrangeWithScores(redisLeaderboard, start, end), jedis,
                 new AtomicInteger(start),
                 true);
     }

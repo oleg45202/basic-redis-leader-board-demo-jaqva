@@ -20,13 +20,13 @@ import static com.redis.basicredisleaderboarddemojava.controller.Utils.*;
 @Component
 public class Api implements ApplicationListener<ContextRefreshedEvent> {
     @Value("${REDIS_URL}")
-    private String properties_uri;
+    private String propertiesUri;
 
     @Value("${REDIS_LEADERBOARD}")
-    private String redis_leaderboard;
+    private String redisLeaderboard;
 
     @Value("${LEADERBOARD_DATA_READY}")
-    private String data_ready_redis_key;
+    private String dataReadyRedisKey;
 
     Jedis jedis;
 
@@ -35,28 +35,28 @@ public class Api implements ApplicationListener<ContextRefreshedEvent> {
     @ResponseBody
     public String getTop10(HttpServletResponse response
     ) {
-        return getRedisDataZrevrangeWithScores(0, 9, jedis, redis_leaderboard);
+        return getRedisDataZrevrangeWithScores(0, 9, jedis, redisLeaderboard);
     }
 
     @RequestMapping(value = "/api/list/all", produces = { "text/html; charset=utf-8" })
     @ResponseBody
     public String getAll(HttpServletResponse response
     ) {
-        return getRedisDataZrevrangeWithScores(0, -1, jedis, redis_leaderboard);
+        return getRedisDataZrevrangeWithScores(0, -1, jedis, redisLeaderboard);
     }
 
     @RequestMapping(value = "/api/list/bottom10", produces = { "text/html; charset=utf-8" })
     @ResponseBody
     public String get10(HttpServletResponse response
     ) {
-        return getRedisDataZrangeWithScores(0, 9, jedis, redis_leaderboard);
+        return getRedisDataZrangeWithScores(0, 9, jedis, redisLeaderboard);
     }
 
     @RequestMapping("/api/list/inRank")
     @ResponseBody
     public String getInRank(HttpServletResponse response, @RequestParam(name = "start") int start,
                             @RequestParam(name = "end") int end) {
-        return getRedisDataZrevrangeWithScores(start, end, jedis, redis_leaderboard);
+        return getRedisDataZrevrangeWithScores(start, end, jedis, redisLeaderboard);
     }
 
     @RequestMapping("/api/list/getBySymbol")
@@ -65,7 +65,7 @@ public class Api implements ApplicationListener<ContextRefreshedEvent> {
         List<JSONObject> list = new ArrayList<>();
         for (String symbol : symbols) {
             list.add(addDataToResult(jedis.hgetAll(symbol),
-                    jedis.zscore(redis_leaderboard, symbol).longValue(),
+                    jedis.zscore(redisLeaderboard, symbol).longValue(),
                     symbol));
         }
         return list.toString();
@@ -74,33 +74,33 @@ public class Api implements ApplicationListener<ContextRefreshedEvent> {
 
     @RequestMapping(value = "/api/rank/update", method = RequestMethod.PATCH)
     public String updateAmount(HttpServletResponse response, @RequestBody Map<String, Object> payload) {
-        boolean is_ok = true;
+        boolean isOk = true;
         try {
-            jedis.zincrby(redis_leaderboard,
+            jedis.zincrby(redisLeaderboard,
                     ((Long) payload.get("amount")).doubleValue(),
                     payload.get("symbol").toString());
 
         }
         catch (Exception e) {
-            is_ok = false;
+            isOk = false;
         }
-        return String.format("{success: %s}", is_ok);
+        return String.format("{success: %s}", isOk);
     }
 
     @RequestMapping("/api/rank/reset")
     @ResponseBody
     public String reset(HttpServletResponse response) {
-        return resetData(false, jedis, data_ready_redis_key, redis_leaderboard);
+        return resetData(false, jedis, dataReadyRedisKey, redisLeaderboard);
     }
 
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
         try {
-            jedis = new Jedis(properties_uri);
+            jedis = new Jedis(propertiesUri);
             resetData(Boolean.parseBoolean(
-                    jedis.get(data_ready_redis_key)),
-                    jedis, data_ready_redis_key,
-                    redis_leaderboard);
+                    jedis.get(dataReadyRedisKey)),
+                    jedis, dataReadyRedisKey,
+                    redisLeaderboard);
         }
         catch (Exception ignored) {
         }
