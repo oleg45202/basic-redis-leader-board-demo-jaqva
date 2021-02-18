@@ -3,8 +3,5 @@
   "description": "Show how the redis works with Spring(java).",
   "repository": "https://github.com/",
   "logo": "https://redis.io/images/redis-white.png",
-  "addons": [
-    "heroku-redis"
-  ],
   "keywords": ["java", "spring", "redis"]
 }
